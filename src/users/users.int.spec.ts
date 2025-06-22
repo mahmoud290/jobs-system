@@ -18,7 +18,7 @@ beforeAll(async () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
-    await dataSource.synchronize(true); // Reset database
+    await dataSource.synchronize(); 
 });
 
 afterAll(async () => {
@@ -44,8 +44,7 @@ it('should create a user', async () => {
 it('should get all users', async () => {
     const res = await request(app.getHttpServer())
     .get('/users')
-    .expect(200);
-
+    .expect(200); 
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
 });
@@ -65,8 +64,7 @@ it('should get a user by ID', async () => {
 
     const res = await request(app.getHttpServer())
     .get(`/users/${userId}`)
-    .expect(200);
-
+    .expect(200); 
     expect(res.body.name).toBe('Sarah');
 });
 
@@ -86,7 +84,7 @@ it('should update a user', async () => {
     const updateRes = await request(app.getHttpServer())
     .patch(`/users/${userId}`)
     .send({ name: 'Ali Updated' })
-    .expect(200);
+    .expect(200); 
 
     expect(updateRes.body.name).toBe('Ali Updated');
 });
@@ -106,8 +104,7 @@ it('should delete a user', async () => {
 
     const deleteRes = await request(app.getHttpServer())
     .delete(`/users/${userId}`)
-    .expect(200);
-
+    .expect(200); 
     expect(deleteRes.body.message).toBe('User Deleted successfully');
 
     await request(app.getHttpServer())
@@ -116,7 +113,6 @@ it('should delete a user', async () => {
 });
 
 it('should apply user to job', async () => {
-    
     const userRes = await request(app.getHttpServer())
     .post('/users')
     .send({
@@ -126,6 +122,7 @@ it('should apply user to job', async () => {
         age: 28,
     })
     .expect(201);
+
     const userId = userRes.body.id;
 
     const jobRes = await request(app.getHttpServer())
@@ -137,11 +134,12 @@ it('should apply user to job', async () => {
         jobType: 'Full-time',
     })
     .expect(201);
+
     const jobId = jobRes.body.id;
 
     const applyRes = await request(app.getHttpServer())
     .post(`/users/${userId}/apply/${jobId}`)
-    .expect(200);
+    .expect(201);
 
     expect(applyRes.body.message).toBe('User applied to job successfully');
 });
@@ -156,6 +154,7 @@ it('should throw error if user already applied to the same job', async () => {
         age: 30,
     })
     .expect(201);
+
     const userId = userRes.body.id;
 
     const jobRes = await request(app.getHttpServer())
@@ -167,16 +166,16 @@ it('should throw error if user already applied to the same job', async () => {
         jobType: 'Full-time',
     })
     .expect(201);
+
     const jobId = jobRes.body.id;
 
-    // Apply once
     await request(app.getHttpServer())
     .post(`/users/${userId}/apply/${jobId}`)
-    .expect(200);
+    .expect(201);
 
     const duplicateApplyRes = await request(app.getHttpServer())
     .post(`/users/${userId}/apply/${jobId}`)
-    .expect(400);
+    .expect(400); 
 
     expect(duplicateApplyRes.body.message).toBe('User Already Applied to this job');
 });

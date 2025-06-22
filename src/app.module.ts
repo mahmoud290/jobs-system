@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 import { Job } from './jobs/job.entity';
 import { User } from './users/user.entity';
 import { Notification } from './notifications/notification.entity';
+import { MailerModule } from './mailer/mailer.module';
 dotenv.config();
 
 
@@ -21,10 +22,12 @@ dotenv.config();
     entities:[Job,User,Notification],
     autoLoadEntities:true,
     synchronize:true,
+    dropSchema: process.env.NODE_ENV === 'test',
   }),
 JobsModule,
 UsersModule,
 AuthModule,
+MailerModule,
 ],
 })
 export class AppModule {}

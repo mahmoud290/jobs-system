@@ -18,7 +18,7 @@ beforeAll(async () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
-    await dataSource.synchronize(true); 
+    await dataSource.synchronize();
 });
 
 afterAll(async () => {
@@ -61,7 +61,7 @@ it('should get user by ID', async () => {
 
     const res = await request(app.getHttpServer())
     .get(`/users/${userId}`)
-    .expect(200);
+    .expect(200); 
 
     expect(res.body.name).toBe('John Doe');
 });
@@ -85,7 +85,7 @@ it('should update user', async () => {
         name: 'New Name',
         age: 25,
     })
-    .expect(200);
+    .expect(200); 
 
     expect(updateRes.body.name).toBe('New Name');
     expect(updateRes.body.age).toBe(25);
@@ -106,8 +106,7 @@ it('should delete user', async () => {
 
     const deleteRes = await request(app.getHttpServer())
     .delete(`/users/${userId}`)
-    .expect(200);
-
+    .expect(200); 
     expect(deleteRes.body.message).toBe('User Deleted successfully');
 });
 
@@ -134,7 +133,7 @@ it('should allow user to apply to job', async () => {
 
     const applyRes = await request(app.getHttpServer())
     .post(`/users/${userRes.body.id}/apply/${jobRes.body.id}`)
-    .expect(200);
+    .expect(201);
 
     expect(applyRes.body.message).toBe('User applied to job successfully');
 });
@@ -165,12 +164,11 @@ it('should not allow user to apply twice to same job', async () => {
 
     await request(app.getHttpServer())
     .post(`/users/${userId}/apply/${jobId}`)
-    .expect(200);
+    .expect(201);
 
     const res = await request(app.getHttpServer())
     .post(`/users/${userId}/apply/${jobId}`)
-    .expect(400);
-
+    .expect(400); 
     expect(res.body.message).toBe('User Already Applied to this job');
 });
 });

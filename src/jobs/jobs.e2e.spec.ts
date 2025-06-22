@@ -18,7 +18,7 @@ beforeAll(async () => {
     await app.init();
 
     dataSource = moduleRef.get(DataSource);
-    await dataSource.synchronize(true);
+    await dataSource.synchronize();
 });
 
 afterAll(async () => {
@@ -99,110 +99,110 @@ it('should delete a job by ID', async () => {
 });
 
 it('should return applied users for a job', async () => {
-const userRes = await request(app.getHttpServer())
+    const userRes = await request(app.getHttpServer())
     .post('/users')
     .send({
-    name: 'Mahmoud',
-    email: 'mahmoud@example.com',
-    password: '123456',
-    age: 22,
+        name: 'Mahmoud',
+        email: 'mahmoud@example.com',
+        password: '123456',
+        age: 22,
     })
     .expect(201);
 
-const userId = userRes.body.id;
+    const userId = userRes.body.id;
 
-const jobRes = await request(app.getHttpServer())
+    const jobRes = await request(app.getHttpServer())
     .post('/jobs')
     .send({
-    title: 'NestJS Dev',
-    description: 'Build APIs',
-    location: 'Online',
-    jobType: 'Full-time',
+        title: 'NestJS Dev',
+        description: 'Build APIs',
+        location: 'Online',
+        jobType: 'Full-time',
     })
     .expect(201);
 
-const jobId = jobRes.body.id;
+    const jobId = jobRes.body.id;
 
-await request(app.getHttpServer())
+    await request(app.getHttpServer())
     .post(`/users/${userId}/apply/${jobId}`)
-    .expect(200);
+    .expect(201);
 
-const appliedUsersRes = await request(app.getHttpServer())
+    const appliedUsersRes = await request(app.getHttpServer())
     .get(`/jobs/${jobId}/applied-users`)
     .expect(200);
 
-expect(appliedUsersRes.body.length).toBe(1);
-expect(appliedUsersRes.body[0].id).toBe(userId);
+    expect(appliedUsersRes.body.length).toBe(1);
+    expect(appliedUsersRes.body[0].id).toBe(userId);
 });
 
 it('should shortlist a user for a job and send notification (E2E)', async () => {
-const userRes = await request(app.getHttpServer())
+    const userRes = await request(app.getHttpServer())
     .post('/users')
     .send({
-    name: 'ShortlistUser',
-    email: 'shortlist@example.com',
-    password: '123456',
-    age: 22,
+        name: 'ShortlistUser',
+        email: 'shortlist@example.com',
+        password: '123456',
+        age: 22,
     })
     .expect(201);
 
-const jobRes = await request(app.getHttpServer())
+    const jobRes = await request(app.getHttpServer())
     .post('/jobs')
     .send({
-    title: 'Shortlist Job',
-    description: 'Test shortlist',
-    location: 'Online',
-    jobType: 'Full-time',
+        title: 'Shortlist Job',
+        description: 'Test shortlist',
+        location: 'Online',
+        jobType: 'Full-time',
     })
     .expect(201);
 
-await request(app.getHttpServer())
+    await request(app.getHttpServer())
     .post(`/users/${userRes.body.id}/apply/${jobRes.body.id}`)
-    .expect(200);
+    .expect(201);
 
-const shortlistRes = await request(app.getHttpServer())
+    const shortlistRes = await request(app.getHttpServer())
     .post(`/jobs/${jobRes.body.id}/shortlist`)
     .send({ userId: userRes.body.id })
     .expect(201);
 
-expect(shortlistRes.body.message).toBe('User shortlisted and notified successfully');
+    expect(shortlistRes.body.message).toBe('User shortlisted and notified successfully');
 });
 
 it('should return shortlisted users for a job (E2E)', async () => {
-const userRes = await request(app.getHttpServer())
+    const userRes = await request(app.getHttpServer())
     .post('/users')
     .send({
-    name: 'ShortlistedUser',
-    email: 'shortlisteduser@example.com',
-    password: '123456',
-    age: 23,
+        name: 'ShortlistedUser',
+        email: 'shortlisteduser@example.com',
+        password: '123456',
+        age: 23,
     })
     .expect(201);
 
-const jobRes = await request(app.getHttpServer())
+    const jobRes = await request(app.getHttpServer())
     .post('/jobs')
     .send({
-    title: 'Review Job',
-    description: 'Review shortlisted users',
-    location: 'Cairo',
-    jobType: 'Full-time',
+        title: 'Review Job',
+        description: 'Review shortlisted users',
+        location: 'Cairo',
+        jobType: 'Full-time',
     })
     .expect(201);
 
-await request(app.getHttpServer())
+    await request(app.getHttpServer())
     .post(`/users/${userRes.body.id}/apply/${jobRes.body.id}`)
-    .expect(200);
+    .expect(201);
 
-await request(app.getHttpServer())
+    await request(app.getHttpServer())
     .post(`/jobs/${jobRes.body.id}/shortlist`)
     .send({ userId: userRes.body.id })
     .expect(201);
 
-const res = await request(app.getHttpServer())
+    const res = await request(app.getHttpServer())
     .get(`/jobs/${jobRes.body.id}/shortlisted-users`)
     .expect(200);
 
-expect(res.body.length).toBeGreaterThan(0);
-expect(res.body[0].id).toBe(userRes.body.id);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0].id).toBe(userRes.body.id);
 });
 });

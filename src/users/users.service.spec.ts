@@ -7,22 +7,22 @@ import { Job } from 'src/jobs/job.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 
-const mockUserRepo = () => ({
-create: jest.fn(),
-save: jest.fn(),
-find: jest.fn(),
-findOne: jest.fn(),
-remove: jest.fn(),
-});
-
-const mockJobRepo = () => ({
-findOne: jest.fn(),
-});
-
 describe('UsersService', () => {
 let service: UsersService;
 let userRepository: jest.Mocked<Repository<User>>;
 let jobRepository: jest.Mocked<Repository<Job>>;
+
+const mockUserRepo = () => ({
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+});
+
+const mockJobRepo = () => ({
+    findOne: jest.fn(),
+});
 
 beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -46,12 +46,12 @@ beforeEach(async () => {
 
 describe('create', () => {
     it('should create and save a user', async () => {
-const dto: CreateUserDto = {
-name: 'Mohamed',
-email: 'Mohamed@gmail.com',
-password: '123456',
-age: 22,
-};
+    const dto: CreateUserDto = {
+        name: 'Mohamed',
+        email: 'Mohamed@gmail.com',
+        password: '123456',
+        age: 22,
+    };
     const user = { id: 1, ...dto } as User;
     userRepository.create.mockReturnValue(user);
     userRepository.save.mockResolvedValue(user);
@@ -68,7 +68,9 @@ describe('findAll', () => {
     it('should return all users', async () => {
     const users = [{ id: 1 }, { id: 2 }] as User[];
     userRepository.find.mockResolvedValue(users);
+
     const result = await service.findAll();
+
     expect(result).toEqual(users);
     });
 });
@@ -77,12 +79,15 @@ describe('findOne', () => {
     it('should return user by id', async () => {
     const user = { id: 1 } as User;
     userRepository.findOne.mockResolvedValue(user);
+
     const result = await service.findOne(1);
+
     expect(result).toEqual(user);
     });
 
     it('should throw if user not found', async () => {
     userRepository.findOne.mockResolvedValue(null);
+
     await expect(service.findOne(1)).rejects.toThrow(NotFoundException);
     });
 });
@@ -93,7 +98,9 @@ describe('update', () => {
     const dto = { name: 'Updated' };
     userRepository.findOne.mockResolvedValue(user);
     userRepository.save.mockResolvedValue({ ...user, ...dto });
+
     const result = await service.update(1, dto);
+
     expect(result).toEqual({ ...user, ...dto });
     });
 });
@@ -103,7 +110,9 @@ describe('remove', () => {
     const user = { id: 1 } as User;
     userRepository.findOne.mockResolvedValue(user);
     userRepository.remove.mockResolvedValue(user);
+
     const result = await service.remove(1);
+
     expect(result).toEqual({ message: 'User Deleted successfully' });
     });
 });
@@ -114,10 +123,12 @@ describe('applyToJob', () => {
     const user = {
 id: 1,
 name: 'Test User',
-email: 'Mohamed@gmail.com.com',
+email: 'Mohamed@gmail.com',
 password: '123456',
 age: 25,
 appliedJobs: [],
+shortlistedJobs: [],
+notifications: [],
 } as User;
 
     userRepository.findOne.mockResolvedValue(user);
