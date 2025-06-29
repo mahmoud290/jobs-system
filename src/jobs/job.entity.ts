@@ -1,35 +1,32 @@
 import { User } from "src/users/user.entity";
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('jobs')
-export class Job{
-    @PrimaryGeneratedColumn()
-    id:number;
+export class Job {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    title :string;
+  @Column()
+  title: string;
 
+  @Column()
+  description: string;
 
-    @Column()
-    description : string;
+  @Column()
+  location: string;
 
+  @Column()
+  jobType: string;
 
-    @Column()
-    location : string;
+  @Column({default:'open'})
+  status:'open' | 'closed';
 
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
 
-    @Column()
-    jobType:string;
+@ManyToMany(() => User, (user) => user.appliedJobs)
+appliedUsers: User[];
 
-
-
-    @Column({type:'timestamp',default:()=>'CURRENT_TIMESTAMP'})
-    createdAt:Date;
-
-    @ManyToMany(()=>User,(user)=>user.appliedJobs)
-    appliedUsers:User[]
-
-    @ManyToMany(() => User, (user) => user.shortlistedJobs)
-    @JoinTable()
-    shortlistedUsers: User[];
+@ManyToMany(() => User, (user) => user.shortlistedJobs)
+shortlistedUsers: User[];
 }

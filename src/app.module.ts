@@ -8,26 +8,31 @@ import { Job } from './jobs/job.entity';
 import { User } from './users/user.entity';
 import { Notification } from './notifications/notification.entity';
 import { MailerModule } from './mailer/mailer.module';
+import { NotificationsModule } from './notifications/notifications.module';
+
 dotenv.config();
 
-
 @Module({
-  imports: [TypeOrmModule.forRoot({
-    type:'postgres',
-    host:process.env.DB_HOST,
-    port:5432,
-    username:process.env.DB_USERNAME,
-    password:process.env.DB_PASSWORD,
-    database:process.env.NODE_ENV === 'test' ? 'job-db-test' : process.env.DB_NAME,
-    entities:[Job,User,Notification],
-    autoLoadEntities:true,
-    synchronize:true,
-    dropSchema: process.env.NODE_ENV === 'test',
-  }),
-JobsModule,
-UsersModule,
-AuthModule,
-MailerModule,
-],
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: 5432,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.NODE_ENV === 'test' ? 'job-db-test' : process.env.DB_NAME,
+      entities: [Job, User, Notification],
+      autoLoadEntities: false,
+      synchronize: process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development',
+      dropSchema: process.env.NODE_ENV === 'test',
+      logging: ['error'],             
+      maxQueryExecutionTime: 1000,    
+    }),
+    JobsModule,
+    UsersModule,
+    AuthModule,
+    MailerModule,
+    NotificationsModule,
+  ],
 })
 export class AppModule {}

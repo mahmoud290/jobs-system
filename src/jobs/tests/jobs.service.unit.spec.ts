@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JobsService } from './jobs.service';
+import { JobsService } from '../jobs.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Job } from './job.entity';
+import { Job } from '../job.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
@@ -23,6 +23,7 @@ const mockUsersRepository = () => ({
 
 const mockNotificationsService = () => ({
   sendNotification: jest.fn(),
+  createNotification: jest.fn(),
 });
 
 const mockMailerService = () => ({
@@ -30,12 +31,14 @@ const mockMailerService = () => ({
   sendShortlistNotification: jest.fn(),
 });
 
+jest.spyOn(console, 'log').mockImplementation(() => {});
+
 describe('JobsService', () => {
   let service: JobsService;
   let jobsRepository: jest.Mocked<Repository<Job>>;
   let usersRepository: jest.Mocked<Repository<User>>;
   let notificationsService: NotificationsService;
-  let mailerService: MailerService;
+  let mailerService: jest.Mocked<MailerService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -165,7 +168,10 @@ describe('JobsService', () => {
         user,
         `You have been shortlisted for the job: ${job.title}`,
       );
-      expect(mailerService.sendShortlistNotification).toHaveBeenCalledWith(user.email, job.title);
+      expect(mailerService.sendShortlistNotification).toHaveBeenCalledWith({
+  to: user.email,
+  jobTitle: job.title,
+});
       expect(result).toEqual({ message: 'User shortlisted and notified successfully' });
     });
 
@@ -201,7 +207,10 @@ describe('JobsService', () => {
         user,
         `You have successfully applied for the job: ${job.title}`,
       );
-      expect(mailerService.sendApplicationEmail).toHaveBeenCalledWith(user.email, job.title);
+      expect(mailerService.sendApplicationEmail).toHaveBeenCalledWith({
+  to: user.email,
+  jobTitle: job.title,
+});
       expect(result).toEqual({ message: 'Application submitted and email sent successfully' });
     });
 
@@ -260,5 +269,67 @@ describe('JobsService', () => {
 
       await expect(service.getShortlistedUsers(999)).rejects.toThrow(NotFoundException);
     });
+});
+describe('closeJob', () => {
+  it('should close the job and notify all applicants', async () => {
+    const mockUser1 = { id: 1, email: 'user1@example.com' } as User;
+    const mockUser2 = { id: 2, email: 'user2@example.com' } as User;
+
+    const job = {
+      id: 10,
+      title: 'Senior Backend Developer',
+      status: 'open',
+      appliedUsers: [mockUser1, mockUser2],
+    } as unknown as Job;
+
+    jobsRepository.findOne.mockResolvedValue(job);
+    jobsRepository.save.mockResolvedValue({ ...job, status: 'closed' });
+
+    const sendNotificationSpy = jest
+      .spyOn(notificationsService, 'sendNotification')
+      .mockResolvedValue({ id: 1 } as any); // ✅ هذا هو التصحيح الصحيح
+
+    const result = await service.closeJob(job.id);
+
+    expect(jobsRepository.findOne).toHaveBeenCalledWith({
+      where: { id: job.id },
+      relations: ['appliedUsers'],
+    });
+
+    expect(jobsRepository.save).toHaveBeenCalledWith({
+      ...job,
+      status: 'closed',
+    });
+
+    expect(sendNotificationSpy).toHaveBeenCalledTimes(2);
+    expect(sendNotificationSpy).toHaveBeenCalledWith(
+      mockUser1,
+      `Job "${job.title}" has been closed.`,
+    );
+    expect(sendNotificationSpy).toHaveBeenCalledWith(
+      mockUser2,
+      `Job "${job.title}" has been closed.`,
+    );
+
+    expect(result).toEqual({ message: 'Job closed and notifications sent' });
+  });
+
+  it('should throw NotFoundException if job is not found', async () => {
+    jobsRepository.findOne.mockResolvedValue(null);
+    await expect(service.closeJob(999)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw BadRequestException if job is already closed', async () => {
+    const closedJob = {
+      id: 5,
+      title: 'Closed Job',
+      status: 'closed',
+      appliedUsers: [],
+    } as unknown as Job;
+
+    jobsRepository.findOne.mockResolvedValue(closedJob);
+
+    await expect(service.closeJob(closedJob.id)).rejects.toThrow(BadRequestException);
+  });
 });
 });

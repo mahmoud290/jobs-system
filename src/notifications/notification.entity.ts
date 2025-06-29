@@ -10,7 +10,7 @@ id: number;
 message: string;
 
 @Column({ default: false })
-read: boolean;
+isRead: boolean;
 
 @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
 createdAt: Date;

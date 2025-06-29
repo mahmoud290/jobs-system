@@ -1,16 +1,21 @@
-import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Job } from "./job.entity";
-import { JobsController } from "./jobs.controller";
-import { JobsService } from "./jobs.service";
-import { User } from "src/users/user.entity";
-import { NotificationsModule } from "src/notifications/notifications.module";
-import { MailerModule } from "src/mailer/mailer.module";
-
+import { forwardRef, Module } from '@nestjs/common';
+import { JobsService } from './jobs.service';
+import { JobsController } from './jobs.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Job } from './job.entity';
+import { UsersModule } from 'src/users/users.module';
+import { MailerModule } from 'src/mailer/mailer.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';  
 
 @Module({
-    imports:[TypeOrmModule.forFeature([Job,User]),NotificationsModule,MailerModule,],
-    controllers:[JobsController],
-    providers:[JobsService],
+  imports: [
+  TypeOrmModule.forFeature([Job]),
+    forwardRef(() => UsersModule),
+    forwardRef(() => NotificationsModule),
+    forwardRef(() => MailerModule),
+  ],
+  providers: [JobsService],
+  controllers: [JobsController],
+  exports:[JobsService],
 })
-export class JobsModule{}
+export class JobsModule {}

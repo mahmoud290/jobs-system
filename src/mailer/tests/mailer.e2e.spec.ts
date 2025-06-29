@@ -5,6 +5,7 @@ import * as request from 'supertest';
 import * as nodemailer from 'nodemailer';
 
 jest.mock('nodemailer');
+jest.spyOn(console, 'log').mockImplementation(() => {});
 
 describe('MailerController (e2e)', () => {
   let app: INestApplication;
@@ -36,7 +37,13 @@ describe('MailerController (e2e)', () => {
       .send({ to: 'test@example.com', jobTitle: 'Full Stack Dev' })
       .expect(201);
 
-    expect(mockSendMail).toHaveBeenCalled();
+    expect(mockSendMail).toHaveBeenCalledWith({
+      from: expect.stringContaining('Jobs System'),
+      to: 'test@example.com',
+      subject: 'Application Received',
+      text: expect.stringContaining('Full Stack Dev'),
+    });
+
     expect(res.body.message).toBe('Application email sent successfully');
   });
 
@@ -46,7 +53,13 @@ describe('MailerController (e2e)', () => {
       .send({ to: 'shortlisted@example.com', jobTitle: 'Backend Engineer' })
       .expect(201);
 
-    expect(mockSendMail).toHaveBeenCalled();
+    expect(mockSendMail).toHaveBeenCalledWith({
+      from: expect.stringContaining('Jobs System'),
+      to: 'shortlisted@example.com',
+      subject: 'You have been shortlisted!',
+      html: expect.stringContaining('Backend Engineer'),
+    });
+
     expect(res.body.message).toBe('Shortlist email sent successfully');
   });
 });
